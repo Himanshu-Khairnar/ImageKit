@@ -1,17 +1,25 @@
-import mongoose, { Schema, model, models } from "mongoose"
+import mongoose, { Schema, model, models } from "mongoose";
+import { ImageVariant, ImageVariantType } from "./Product.model";
 
+interface PopulatedUser {
+    _id: mongoose.Types.ObjectId;
+    email: string;
+}
 
-interface IOrder {
-    userID: mongoose.Types.ObjectId;
-    productID: mongoose.Types.ObjectId;
-    variant: {
-        type: "SQUARE" | "WIDE" | "POTRAIT";
-        price: number;
-        license: "personal" | "commerical";
-    };
+interface PopulatedProduct {
+    _id: mongoose.Types.ObjectId;
+    name: string;
+    imageUrl: string;
+}
+
+export interface IOrder {
+    _id?: mongoose.Types.ObjectId;
+    userId: mongoose.Types.ObjectId | PopulatedUser;
+    productId: mongoose.Types.ObjectId | PopulatedProduct;
+    variant: ImageVariant;
     razorpayOrderId: string;
-    razorpayPaymentId: string;
-    Amount: number;
+    razorpayPaymentId?: string;
+    amount: number;
     status: "pending" | "completed" | "failed";
     downloadUrl?: string;
     previewUrl?: string;
@@ -19,37 +27,38 @@ interface IOrder {
     updatedAt?: Date;
 }
 
-const OrderSchema = new Schema<IOrder>({
-    userID: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    productID: { type: Schema.Types.ObjectId, ref: "Product", required: true },
-    variant: {
-        type: {
-            type: String,
-            required: true,
-            enum: ["SQUARE", "WIDE", "POTRAIT"]
-
+const orderSchema = new Schema<IOrder>(
+    {
+        userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+        productId: { type: Schema.Types.ObjectId, ref: "Product", required: true },
+        variant: {
+            type: {
+                type: String,
+                required: true,
+                enum: ["SQUARE", "WIDE", "PORTRAIT"] as ImageVariantType[],
+                set: (v: string) => v.toUpperCase(),
+            },
+            price: { type: Number, required: true },
+            license: {
+                type: String,
+                required: true,
+                enum: ["personal", "commercial"],
+            },
         },
-        price: { type: Number, required: true },
-        license: {
+        razorpayOrderId: { type: String, required: true },
+        razorpayPaymentId: { type: String },
+        amount: { type: Number, required: true },
+        status: {
             type: String,
             required: true,
-            enum: ["personal", "commerical"]
-
-        }
+            enum: ["pending", "completed", "failed"],
+            default: "pending",
+        },
+        downloadUrl: { type: String },
+        previewUrl: { type: String },
     },
-    razorpayOrderId:{type:String,required:true},
-    razorpayPaymentId:{type:String,required:true},
-    Amount:{type:Number,required:true},
-    status: {
-        type: String,
-        required: true,
-        enum: ["pending", "completed", "failed"],
-        default:"pending"
-    },
-    downloadUrl:{type:String},
-    previewUrl:{type:String}
-},{timestamps:true})
+    { timestamps: true }
+);
 
-const Order = models?.Order || model<IOrder>("Order",OrderSchema)
-
-export default Order
+const Order = models?.Order || model<IOrder>("Order", orderSchema);
+export default Order;
