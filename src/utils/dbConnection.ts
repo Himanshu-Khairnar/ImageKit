@@ -12,7 +12,7 @@ if(!cached){
     cached = global.mongoose ={con :null ,promise:null}
 }
 
-export async function name() {
+export async function dbConnection() {
     if(cached.con){
         return cached.con
     }
