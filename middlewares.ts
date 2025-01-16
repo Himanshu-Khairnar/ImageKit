@@ -29,6 +29,7 @@ export default withAuth(
                 {
                     return true
                 }
+                if(pathname.startsWith("/api/webhooks") || pathname.startsWith("/orders"))
 
                 if(pathname.startsWith("/admin")){
                     return token?.role === "admin"
